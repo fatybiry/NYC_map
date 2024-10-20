@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<base target="_top">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<title>try- Leaflet</title>
+	
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+	<script src="NYC.geojson"></script>
+	
+	<!-- Plugins ajoutés -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+	
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.6.0/Control.FullScreen.css" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/1.6.0/Control.FullScreen.js"></script>
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.0.0/dist/geosearch.css" />
+	<script src="https://unpkg.com/leaflet-geosearch@3.0.0/dist/geosearch.umd.js"></script>
+
+    <!-- Leaflet MiniMap -->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css" />
+	<script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.js"></script>
+
+    <!-- Leaflet Easy Button -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-easybutton/2.4.0/easy-button.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-easybutton/2.4.0/easy-button.css" />
+
+	<!-- Leaflet MarkerCluster -->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+	<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		.leaflet-container {
+			height: 400px;
+			width: 600px;
+			max-width: 100%;
+			max-height: 100%;
+		}
+		#title {
+			text-align: center;
+			font-size: 3.5em;
+			font-weight: bold;
+			font-style: italic;
+			color: #1E90FF; /* Bleu Dodger */
+			text-shadow: 3px 3px 8px rgba(255, 165, 0, 0.7); /* Ombre orange */
+			background-color: #fffacd; /* Jaune clair */
+			padding: 10px;
+			border-radius: 15px;
+			border: 2px solid #ff4500; /* Bordure orange vif */
+			margin-bottom: 20px;
+		}
+	</style>
+</head>
+<body>
+
+<!-- Ajout du titre ici -->
+<div id="title">NYC Neighborhoods</div>
+
+<div id="map" style="width: 1200px; height: 600px;"></div>
+
+<script>
+	// Initialisation de la carte sans zoom initial
+	const map = L.map('map');
+
+	// Ajout de la couche OpenStreetMap
+	const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 19,
+		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+	});
+
+	// Ajout de la couche satellite Mapbox
+	const satelliteLayer = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}?access_token=YOUR_MAPBOX_ACCESS_TOKEN', {
+		attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
+		maxZoom: 19
+	});
+
+	// Ajout des couches à un contrôle de bascule
+	const baseMaps = {
+		"OpenStreetMap": osmLayer,
+		"Satellite": satelliteLayer
+	};
+	L.control.layers(baseMaps).addTo(map);
+
+	// Activer la couche OpenStreetMap par défaut
+	osmLayer.addTo(map);
+
+	// Création d'une icône de marqueur rouge personnalisée
+	const redMarkerIcon = L.icon({
+		iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x-red.png', // Icône rouge
+		iconSize: [25, 41], // Taille de l'icône
+		iconAnchor: [12, 41], // Position de l'icône sur la carte
+		popupAnchor: [1, -34], // Position de la popup par rapport à l'icône
+		shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png', // Ombre de l'icône
+		shadowSize: [41, 41] // Taille de l'ombre
+	});
+
+	// Ajout d'un marqueur avec l'icône rouge à la nouvelle position
+	const marker = L.marker([40.624372593164594, -73.999131473636112], {icon: redMarkerIcon}).bindPopup("<b>NYC</b><br>Brooklyn.");
+        L.geoJSON(NYC).addTo(map);
+	// Ajout d'un polygone rouge
+	const polygon = L.polygon([
+		[40.624372593164594, -73.999131473636112], // Point 1
+		[40.6247, -73.995], // Point 2
+		[40.622, -73.997], // Point 3
+		[40.623, -74.001]  // Point 4
+	], {
+		color: 'red',
+		fillColor: 'red',
+		fillOpacity: 0.5
+	}).bindPopup("Zone polygonale en rouge autour de Brooklyn.");
+
+	// Ajout des objets sur la carte
+	const features = L.featureGroup([marker, polygon]).addTo(map);
+
+	// Ajuster automatiquement le zoom et les limites à l'étendue des objets
+	map.fitBounds(features.getBounds());
+
+	// Ajout du contrôle de dessin
+	const drawnItems = new L.FeatureGroup();
+	map.addLayer(drawnItems);
+	const drawControl = new L.Control.Draw({
+		edit: {
+			featureGroup: drawnItems
+		}
+	});
+	map.addControl(drawControl);
+
+	// Ajout du contrôle plein écran
+	L.control.fullscreen().addTo(map);
+
+	// Ajout du contrôle de recherche
+	const provider = new GeoSearch.OpenStreetMapProvider();
+	const searchControl = new GeoSearch.GeoSearchControl({
+		provider: provider,
+		style: 'bar',
+		autoComplete: true
+	});
+	map.addControl(searchControl);
+
+	// Gestion des événements de dessin
+	map.on(L.Draw.Event.CREATED, function (event) {
+		const layer = event.layer;
+		drawnItems.addLayer(layer);
+	});
+
+	// Ajout de MiniMap
+	const miniMap = new L.Control.MiniMap(L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png')).addTo(map);
+
+	// Ajout d'un bouton personnalisé
+	L.easyButton('fa-globe', function() {
+		map.fitBounds(features.getBounds());
+	}, 'Recentrer la carte').addTo(map);
+
+	// Ajout du clustering des marqueurs
+	const markers = L.markerClusterGroup();
+	L.marker([40.623372593164594, -73.998131473636112]).addTo(markers);
+	L.marker([40.625372593164594, -74.000131473636112]).addTo(markers);
+	map.addLayer(markers);
+</script>
+
+</body>
+</html>
